@@ -169,9 +169,8 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
         for (SDWebImageDownloaderProgressBlock progressBlock in [self callbacksForKey:kProgressCallbackKey]) {
             progressBlock(0, NSURLResponseUnknownLength, self.request.URL);
         }
-        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStartNotification object:weakSelf];
+            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStartNotification object:self];
         });
     } else {
         [self callCompletionBlocksWithError:[NSError errorWithDomain:NSURLErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey : @"Connection can't be initialized"}]];
@@ -202,9 +201,8 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 
     if (self.dataTask) {
         [self.dataTask cancel];
-        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:weakSelf];
+            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
         });
 
         // As we cancelled the connection, its callback won't be called and thus won't
@@ -268,9 +266,8 @@ didReceiveResponse:(NSURLResponse *)response
         
         self.imageData = [[NSMutableData alloc] initWithCapacity:expected];
         self.response = response;
-        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadReceiveResponseNotification object:weakSelf];
+            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadReceiveResponseNotification object:self];
         });
     }
     else {
@@ -283,9 +280,8 @@ didReceiveResponse:(NSURLResponse *)response
         } else {
             [self.dataTask cancel];
         }
-        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:weakSelf];
+            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:self];
         });
         
         [self callCompletionBlocksWithError:[NSError errorWithDomain:NSURLErrorDomain code:((NSHTTPURLResponse *)response).statusCode userInfo:nil]];
@@ -406,11 +402,10 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     @synchronized(self) {
         self.dataTask = nil;
-        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:weakSelf];
+            [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:self];
             if (!error) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadFinishNotification object:weakSelf];
+                [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadFinishNotification object:self];
             }
         });
     }
