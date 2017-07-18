@@ -89,8 +89,9 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
     SDCallbacksDictionary *callbacks = [NSMutableDictionary new];
     if (progressBlock) callbacks[kProgressCallbackKey] = [progressBlock copy];
     if (completedBlock) callbacks[kCompletedCallbackKey] = [completedBlock copy];
+    __weak typeof(self) weakSelf = self;
     dispatch_barrier_async(self.barrierQueue, ^{
-        [self.callbackBlocks addObject:callbacks];
+        [weakSelf.callbackBlocks addObject:callbacks];
     });
     return callbacks;
 }
@@ -225,8 +226,9 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 }
 
 - (void)reset {
+    __weak typeof(self) weakSelf = self;
     dispatch_barrier_async(self.barrierQueue, ^{
-        [self.callbackBlocks removeAllObjects];
+        [weakSelf.callbackBlocks removeAllObjects];
     });
     self.dataTask = nil;
     self.imageData = nil;
