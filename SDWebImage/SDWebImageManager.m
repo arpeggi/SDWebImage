@@ -141,7 +141,7 @@
     if (url.absoluteString.length == 0 || (!(options & SDWebImageRetryFailed) && isFailedUrl)) {
         dispatch_main_sync_safe(^{
             NSError *error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorFileDoesNotExist userInfo:nil];
-            completedBlock(nil, error, SDImageCacheTypeNone, YES, url);
+            completedBlock(nil, nil, error, SDImageCacheTypeNone, YES, url);
         });
         return operation;
     }
@@ -151,7 +151,7 @@
     }
     NSString *key = [self cacheKeyForURL:url];
 
-    operation.cacheOperation = [self.imageCache queryDiskCacheForKey:key done:^(UIImage *image, SDImageCacheType cacheType) {
+    operation.cacheOperation = [self.imageCache queryDiskCacheForKey:key done:^(UIImage *image, NSData *cachedData, SDImageCacheType cacheType) {
         if (operation.isCancelled) {
             @synchronized (self.runningOperations) {
                 [self.runningOperations removeObject:operation];
@@ -165,7 +165,7 @@
                 dispatch_main_sync_safe(^{
                     // If image was found in the cache but SDWebImageRefreshCached is provided, notify about the cached image
                     // AND try to re-download it in order to let a chance to NSURLCache to refresh it from server.
-                    completedBlock(image, nil, cacheType, YES, url);
+                    completedBlock(image, cachedData, nil, cacheType, YES, url);
                 });
             }
 
@@ -194,7 +194,7 @@
                 else if (error) {
                     dispatch_main_sync_safe(^{
                         if (strongOperation && !strongOperation.isCancelled) {
-                            completedBlock(nil, error, SDImageCacheTypeNone, finished, url);
+                            completedBlock(nil, nil, error, SDImageCacheTypeNone, finished, url);
                         }
                     });
 
@@ -233,7 +233,7 @@
 
                             dispatch_main_sync_safe(^{
                                 if (strongOperation && !strongOperation.isCancelled) {
-                                    completedBlock(transformedImage, nil, SDImageCacheTypeNone, finished, url);
+                                    completedBlock(transformedImage, data, nil, SDImageCacheTypeNone, finished, url);
                                 }
                             });
                         });
@@ -245,7 +245,7 @@
 
                         dispatch_main_sync_safe(^{
                             if (strongOperation && !strongOperation.isCancelled) {
-                                completedBlock(downloadedImage, nil, SDImageCacheTypeNone, finished, url);
+                                completedBlock(downloadedImage, data, nil, SDImageCacheTypeNone, finished, url);
                             }
                         });
                     }
@@ -274,7 +274,7 @@
             dispatch_main_sync_safe(^{
                 __strong __typeof(weakOperation) strongOperation = weakOperation;
                 if (strongOperation && !strongOperation.isCancelled) {
-                    completedBlock(image, nil, cacheType, YES, url);
+                    completedBlock(image, cachedData, nil, cacheType, YES, url);
                 }
             });
             @synchronized (self.runningOperations) {
@@ -286,7 +286,7 @@
             dispatch_main_sync_safe(^{
                 __strong __typeof(weakOperation) strongOperation = weakOperation;
                 if (strongOperation && !weakOperation.isCancelled) {
-                    completedBlock(nil, nil, SDImageCacheTypeNone, YES, url);
+                    completedBlock(nil, nil, nil, SDImageCacheTypeNone, YES, url);
                 }
             });
             @synchronized (self.runningOperations) {
@@ -365,7 +365,7 @@
     return [self downloadImageWithURL:url
                               options:options
                              progress:progressBlock
-                            completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                            completed:^(UIImage *image, NSData *data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
                                 if (completedBlock) {
                                     completedBlock(image, error, cacheType, finished);
                                 }

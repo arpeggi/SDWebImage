@@ -9,6 +9,8 @@
 #import "SDWebImageCompat.h"
 #import "SDWebImageManager.h"
 
+typedef void(^SDSetImageBlock)(UIImage *image, NSData *imageData);
+
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIImageView.
  *
@@ -161,6 +163,8 @@
  *                       The fourth parameter is the original image url.
  */
 - (void)sd_setImageWithPreviousCachedImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletionBlock)completedBlock;
+
+- (void)sd_internalSetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options setImageBlock:(SDSetImageBlock)setImageBlock progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletionBlock)completedBlock;
 
 /**
  * Download an array of images and starts them in an animation loop

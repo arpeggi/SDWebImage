@@ -92,7 +92,7 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageOptions) {
 
 typedef void(^SDWebImageCompletionBlock)(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL);
 
-typedef void(^SDWebImageCompletionWithFinishedBlock)(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL);
+typedef void(^SDWebImageCompletionWithFinishedBlock)(UIImage *image, NSData *data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL);
 
 typedef NSString *(^SDWebImageCacheKeyFilterBlock)(NSURL *url);
 

@@ -10,6 +10,7 @@
 #import "SDWebImageDecoder.h"
 #import "UIImage+MultiFormat.h"
 #import <CommonCrypto/CommonDigest.h>
+#import "UIImage+GIF.h"
 
 // See https://github.com/rs/SDWebImage/pull/1141 for discussion
 @interface AutoPurgeCache : NSCache
@@ -391,14 +392,21 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     }
 
     if (!key) {
-        doneBlock(nil, SDImageCacheTypeNone);
+        doneBlock(nil, nil, SDImageCacheTypeNone);
         return nil;
     }
 
     // First check the in-memory cache...
     UIImage *image = [self imageFromMemoryCacheForKey:key];
+    
     if (image) {
-        doneBlock(image, SDImageCacheTypeMemory);
+        NSData *diskData = nil;
+        if ([image isGIF]) {
+            diskData = [self diskImageDataBySearchingAllPathsForKey:key];
+        }
+        if (doneBlock) {
+            doneBlock(image, diskData, SDImageCacheTypeMemory);
+        }
         return nil;
     }
 
@@ -409,15 +417,18 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
         }
 
         @autoreleasepool {
+            NSData *diskData = [self diskImageDataBySearchingAllPathsForKey:key];
             UIImage *diskImage = [self diskImageForKey:key];
             if (diskImage && self.shouldCacheImagesInMemory) {
                 NSUInteger cost = SDCacheCostForImage(diskImage);
                 [self.memCache setObject:diskImage forKey:key cost:cost];
             }
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                doneBlock(diskImage, SDImageCacheTypeDisk);
-            });
+            
+            if (doneBlock) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    doneBlock(diskImage, diskData, SDImageCacheTypeDisk);
+                });
+            }
         }
     });
 
